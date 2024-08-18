@@ -9,7 +9,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "git+https://github.com/A-d-i-t-h-y-a-n/Baileys.js.git",  
+    "@whiskeysockets/baileys": "git+https://github.com/sataniceypz/Baileys.git",  
     "qrcode": "^1.5.3",
     "awesome-phonenumber": "^2.64.0",
     "pino": "^8.1.0",
