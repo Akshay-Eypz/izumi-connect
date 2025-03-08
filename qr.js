@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
 		const {
 			state,
 			saveCreds
-		} = await useMultiFileAuthState('./temp/' + id)
+		} = await useMultiFileAuthState('./tmp/' + id)
 		try {
 			let session = makeWASocket({
 				auth: state,
