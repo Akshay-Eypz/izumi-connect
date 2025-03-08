@@ -9,7 +9,7 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     delay,
-    version: [ 2, 3000, 1015901307 ],
+    version: [2, 3000, 1015901307],
     Browsers,
     makeCacheableSignalKeyStore
 } = require('@whiskeysockets/baileys');
@@ -17,8 +17,9 @@ const {
 let router = express.Router();
 
 function removeFile(FilePath) {
-    if (!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true });
+    if (fs.existsSync(FilePath)) {
+        fs.rmSync(FilePath, { recursive: true, force: true });
+    }
 }
 
 const specificFiles = [
@@ -49,8 +50,6 @@ async function readSpecificJSONFiles(folderPath) {
         if (fs.existsSync(filePath)) {
             const fileContent = fs.readFileSync(filePath, 'utf-8');
             result[file] = JSON.parse(fileContent);
-        } else {
-            console.warn(`File not found: ${filePath}`);
         }
     });
     return result;
@@ -90,35 +89,57 @@ router.get('/', async (req, res) => {
             session.ev.on('creds.update', saveCreds);
 
             session.ev.on('connection.update', async (s) => {
-                const { connection, lastDisconnect } = s;
+                try {
+                    const { connection, lastDisconnect } = s;
 
-                if (connection == 'open') {
-                    await delay(10000);
-                    const mergedJSON = await readSpecificJSONFiles(authStatePath);
-                    fs.writeFileSync(path.join(authStatePath, `${id}.json`), JSON.stringify(mergedJSON));
-                    const output = await pastebin.createPasteFromFile(path.join(authStatePath, `${id}.json`), 'pastebin-js test', null, 1, 'N');
-                    let message = output.split('/')[3];
-                    let msg = `izumi~${message.split('').reverse().join('')}`;
-                    await session.groupAcceptInvite('KHvcGD7aEUo8gPocJsYXZe');
-                    await session.sendMessage(session.user.id, { text: msg });
-                    await delay(100);
-                    await session.ws.close();
-                    return await removeFile(authStatePath);
-                } else if (connection === 'close' && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    getPaire();
+                    if (connection === 'open') {
+                        console.log('[INFO] Connection Opened');
+                        await delay(10000);
+                        const mergedJSON = await readSpecificJSONFiles(authStatePath);
+                        fs.writeFileSync(path.join(authStatePath, `${id}.json`), JSON.stringify(mergedJSON));
+
+                        const output = await pastebin.createPasteFromFile(
+                            path.join(authStatePath, `${id}.json`),
+                            'pastebin-js test',
+                            null,
+                            1,
+                            'N'
+                        );
+
+                        let message = output.split('/')[3];
+                        let msg = `izumi~${message.split('').reverse().join('')}`;
+                        await session.groupAcceptInvite('KHvcGD7aEUo8gPocJsYXZe');
+                        await session.sendMessage(session.user.id, { text: msg });
+
+                        await delay(100);
+                        await session.ws.close();
+                        removeFile(authStatePath);
+                    } else if (connection === 'close') {
+                        const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
+                        console.log(`[WARN] Connection Closed - Reconnect: ${shouldReconnect}`);
+
+                        if (shouldReconnect) {
+                            await delay(10000);
+                            getPaire();
+                        } else {
+                            console.log('[ERROR] Session Expired or Logged Out.');
+                            removeFile(authStatePath);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[ERROR] Connection Update Failed:', error);
                 }
             });
         } catch (err) {
-            console.log('Service restarted');
-            await removeFile(authStatePath);
+            console.error('[ERROR] Service Restarting:', err);
+            removeFile(authStatePath);
             if (!res.headersSent) {
-                await res.send({ code: 'Service Unavailable' });
+                res.send({ code: 'Service Unavailable' });
             }
         }
     }
 
-    return await getPaire();
+    return getPaire();
 });
 
 module.exports = router;
