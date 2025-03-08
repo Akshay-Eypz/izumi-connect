@@ -1,15 +1,16 @@
 {
-    "description": "qr",
-    "main": "./index.js",
-  "engines" : { 
-    "npm" : ">=9.7.2",
-    "node" : ">=20.0.0"
-    },
+  "name": "izumi-connect",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "14.x"
+  },
     "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "git+https://github.com/sataniceypz/Baileys.git",  
+    "@whiskeysockets/baileys": "git+https://github.com/A-d-i-t-h-y-a-n/Baileys.js.git",  
     "qrcode": "^1.5.3",
     "awesome-phonenumber": "^2.64.0",
     "pino": "^8.1.0",
