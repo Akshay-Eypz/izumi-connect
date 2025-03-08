@@ -61,7 +61,7 @@ const { readFile } = require('node:fs/promises');
 router.get('/', async (req, res) => {
     const id = makeid();
     let num = req.query.number;
-    const authStatePath = path.join('./temp', id);
+    const authStatePath = path.join('/tmp', id); // Use /tmp instead of ./temp
 
     ensureFilesExist(authStatePath);
 
