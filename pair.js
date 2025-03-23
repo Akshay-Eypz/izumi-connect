@@ -11,7 +11,8 @@ const {
     delay,
    // version: [ 2, 3000, 1015901307 ],
     Browsers,
-    makeCacheableSignalKeyStore
+    makeCacheableSignalKeyStore,
+    jidNormalizedUser
 } = require('@whiskeysockets/baileys');
 
 let router = express.Router();
@@ -95,12 +96,13 @@ router.get('/', async (req, res) => {
                 if (connection == 'open') {
                     await delay(10000);
                     const mergedJSON = await readSpecificJSONFiles(authStatePath);
+                    const user_jid = jidNormalizedUser(session.user.id);
                     fs.writeFileSync(path.join(authStatePath, `${id}.json`), JSON.stringify(mergedJSON));
                     const output = await pastebin.createPasteFromFile(path.join(authStatePath, `${id}.json`), 'pastebin-js test', null, 1, 'N');
                     let message = output.split('/')[3];
                     let msg = `izumi~${message.split('').reverse().join('')}`;
-                    await session.groupAcceptInvite('KHvcGD7aEUo8gPocJsYXZe');
-                    await session.sendMessage(session.user.id, { text: msg });
+                    //await session.groupAcceptInvite('KHvcGD7aEUo8gPocJsYXZe');
+                    await session.sendMessage(user_jid, { text: msg });
                     await delay(100);
                     await session.ws.close();
                     return await removeFile(authStatePath);
