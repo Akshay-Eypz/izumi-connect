@@ -25,7 +25,7 @@ let pair = require('./pair');
 app.use('/code', pair);
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__path, '/public/index.html'));
+    res.sendFile(path.join(__path, '/public/pair.html'));
 });
 
 app.listen(PORT, () => {
