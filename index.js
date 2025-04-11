@@ -14,13 +14,6 @@ app.get('/pair', (req, res) => {
     res.sendFile(path.join(__path, '/public/pair.html'));
 });
 
-app.get('/qr', (req, res) => {
-    res.sendFile(path.join(__path, '/public/qr.html'));
-});
-
-let qrCode = require('./qr');
-app.use('/qr-code', qrCode);
-
 let pair = require('./pair');
 app.use('/code', pair);
 
