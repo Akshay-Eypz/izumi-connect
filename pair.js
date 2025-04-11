@@ -63,7 +63,7 @@ const { readFile } = require('node:fs/promises');
 router.get('/', async (req, res) => {
     const id = makeid();
     let num = req.query.number;
-    const authStatePath = path.join('/tmp', id); // Use /tmp instead of ./temp
+    const authStatePath = path.join('/tmp', id);
 
     ensureFilesExist(authStatePath);
 
@@ -87,6 +87,10 @@ router.get('/', async (req, res) => {
                 if (!res.headersSent) {
                     await res.send({ code });
                 }
+                // Clean up after sending pairing code
+                await delay(1000);
+                await session.ws.close();
+                return removeFile(authStatePath);
             }
 
             session.ev.on('creds.update', saveCreds);
@@ -102,26 +106,24 @@ router.get('/', async (req, res) => {
                     const output = await pastebin.createPasteFromFile(path.join(authStatePath, `${id}.json`), 'pastebin-js test', null, 1, 'N');
                     let message = output.split('/')[3];
                     let msg = `izumi~${message.split('').reverse().join('')}`;
-                    //await session.groupAcceptInvite('KHvcGD7aEUo8gPocJsYXZe');
                     await session.sendMessage(user_jid, { text: msg });
                     await delay(100);
                     await session.ws.close();
-                    return await removeFile(authStatePath);
-                } else if (connection === 'close' && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    return removeFile(authStatePath); // already existed, but retained
+                } else if (connection === 'close' && lastDisconnect?.error?.output?.statusCode != 401) {
                     await delay(10000);
                     getPaire();
                 }
             });
         } catch (err) {
             console.log('Service restarted');
-            await removeFile(authStatePath);
             if (!res.headersSent) {
                 await res.send({ code: 'Service Unavailable' });
             }
+            return removeFile(authStatePath);
         }
     }
 
-    return await getPaire();
+    return getPaire();
 });
-
 module.exports = router;
